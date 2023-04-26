@@ -81,10 +81,13 @@ the exact dependency versions to install.
   "version": "1.0.0",
   "description": "Hello World!",
   "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "author": "Jane Doe",
   "license": "MIT",
   "devDependencies": {
-    "electron": "19.0.0"
+    "electron": "23.1.3"
   }
 }
 ```
@@ -131,19 +134,20 @@ add `electron .` to the `start` command in the [`scripts`][package-scripts]
 field of your package.json. This command will tell the Electron executable to look for the main
 script in the current directory and run it in dev mode.
 
-```json {8-10} title='package.json'
+```json {7} title='package.json'
 {
   "name": "my-electron-app",
   "version": "1.0.0",
   "description": "Hello World!",
   "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "author": "Jane Doe",
   "license": "MIT",
-  "scripts": {
-    "start": "electron ."
-  },
   "devDependencies": {
-    "electron": "^19.0.0"
+    "electron": "23.1.3"
   }
 }
 ```
@@ -270,7 +274,7 @@ calling `createWindow()` once its promise is fulfilled.
 You typically listen to Node.js events by using an emitter's `.on` function.
 
 ```diff
-+ app.on('ready').then(() => {
++ app.on('ready', () => {
 - app.whenReady().then(() => {
   createWindow()
 })
@@ -465,7 +469,7 @@ privileged APIs and how to communicate between processes.
 [repl]: ./repl.md
 [webpack]: https://webpack.js.org
 [window-all-closed]: ../api/app.md#event-window-all-closed
-[wsl]: https://docs.microsoft.com/en-us/windows/wsl/about#what-is-wsl-2
+[wsl]: https://learn.microsoft.com/en-us/windows/wsl/about#what-is-wsl-2
 
 <!-- Tutorial links -->
 

@@ -11,32 +11,32 @@ if we ever align our .pak file generation with Chrome we can remove this
 patch.
 
 diff --git a/chrome/BUILD.gn b/chrome/BUILD.gn
-index cf53c168b31fecca8fd07f167d1e3523bc3be568..b13ffdfb9ffdaea0908b0b4b8260666f2c24988b 100644
+index 98c9dca792522fd27774d9d22ead61ee546b1832..d255787f554b71cb9034229212f80b0fdd5c73f9 100644
 --- a/chrome/BUILD.gn
 +++ b/chrome/BUILD.gn
-@@ -186,11 +186,16 @@ if (!is_android && !is_mac) {
-         "common/crash_keys.h",
-       ]
+@@ -193,11 +193,16 @@ if (!is_android && !is_mac) {
+           "common/crash_keys.h",
+         ]
  
-+      if (!is_electron_build) {
-+        deps = [
-+          ":packed_resources_integrity",
-+        ]
-+      }
++        if (!is_electron_build) {
++          deps = [
++            ":packed_resources_integrity",
++          ]
++        }
 +
-       deps += [
-         ":chrome_dll",
-         ":chrome_exe_version",
-         ":copy_first_run",
--        ":packed_resources_integrity",
-         ":visual_elements_resources",
-         "//base",
-         "//build:branding_buildflags",
+         deps += [
+           ":chrome_dll",
+           ":chrome_exe_version",
+           ":copy_first_run",
+-          ":packed_resources_integrity",
+           ":visual_elements_resources",
+           "//base",
+           "//build:branding_buildflags",
 diff --git a/chrome/browser/BUILD.gn b/chrome/browser/BUILD.gn
-index f22463331732a07802a86cb65c07b9f1a1d3c29f..bda6ef4df1d2718ff6403ec392b67e17bab8a6f0 100644
+index 09f96b22f60fac75a1d194a6ee40346e3841c5c6..f9f2a0801b4140080142d4116995bee66e157cd7 100644
 --- a/chrome/browser/BUILD.gn
 +++ b/chrome/browser/BUILD.gn
-@@ -4544,7 +4544,7 @@ static_library("browser") {
+@@ -4571,7 +4571,7 @@ static_library("browser") {
  
      # On Windows, the hashes are embedded in //chrome:chrome_initial rather
      # than here in :chrome_dll.
@@ -46,10 +46,10 @@ index f22463331732a07802a86cb65c07b9f1a1d3c29f..bda6ef4df1d2718ff6403ec392b67e17
        sources += [ "certificate_viewer_stub.cc" ]
      }
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index f4f0653f78b4bd114e46f60f214a5269fd9229c5..aa5d6db8cc9cf2a6f3266f2265460073fbe45df0 100644
+index 67fb2ff53b6145cee2e310592828d3b6337d5b17..85d6e319598edf1b5b1b80ccb3092154a3b54cb5 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
-@@ -6370,7 +6370,6 @@ test("unit_tests") {
+@@ -6413,7 +6413,6 @@ test("unit_tests") {
  
      deps += [
        "//chrome:other_version",
@@ -57,7 +57,7 @@ index f4f0653f78b4bd114e46f60f214a5269fd9229c5..aa5d6db8cc9cf2a6f3266f2265460073
        "//chrome//services/util_win:unit_tests",
        "//chrome/app:chrome_dll_resources",
        "//chrome/app:win_unit_tests",
-@@ -6396,6 +6395,10 @@ test("unit_tests") {
+@@ -6439,6 +6438,10 @@ test("unit_tests") {
        "//ui/resources",
      ]
  
@@ -68,7 +68,7 @@ index f4f0653f78b4bd114e46f60f214a5269fd9229c5..aa5d6db8cc9cf2a6f3266f2265460073
      ldflags = [
        "/DELAYLOAD:api-ms-win-core-winrt-error-l1-1-0.dll",
        "/DELAYLOAD:api-ms-win-core-winrt-l1-1-0.dll",
-@@ -7313,7 +7316,6 @@ test("unit_tests") {
+@@ -7364,7 +7367,6 @@ test("unit_tests") {
      }
  
      deps += [
@@ -76,7 +76,7 @@ index f4f0653f78b4bd114e46f60f214a5269fd9229c5..aa5d6db8cc9cf2a6f3266f2265460073
        "//chrome/browser/apps:icon_standardizer",
        "//chrome/browser/apps/app_service",
        "//chrome/browser/apps/app_service:test_support",
-@@ -7389,6 +7391,10 @@ test("unit_tests") {
+@@ -7443,6 +7445,10 @@ test("unit_tests") {
        "//ui/webui/resources/js/browser_command:mojo_bindings",
      ]
  

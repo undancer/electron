@@ -64,6 +64,7 @@
 #include "gin/handle.h"
 #include "gin/object_template_builder.h"
 #include "gin/wrappable.h"
+#include "media/base/mime_util.h"
 #include "mojo/public/cpp/bindings/associated_remote.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
 #include "mojo/public/cpp/bindings/remote.h"
@@ -496,8 +497,7 @@ scoped_refptr<base::TaskRunner> CreatePrinterHandlerTaskRunner() {
 #elif BUILDFLAG(IS_WIN)
   // Windows drivers are likely not thread-safe and need to be accessed on the
   // UI thread.
-  return content::GetUIThreadTaskRunner(
-      {base::MayBlock(), base::TaskPriority::USER_VISIBLE});
+  return content::GetUIThreadTaskRunner({base::TaskPriority::USER_VISIBLE});
 #else
   // Be conservative on unsupported platforms.
   return base::ThreadPool::CreateSingleThreadTaskRunner(kTraits);
@@ -621,6 +621,23 @@ void SetBackgroundColor(content::RenderWidgetHostView* rwhv, SkColor color) {
   rwhv->SetBackgroundColor(color);
   static_cast<content::RenderWidgetHostViewBase*>(rwhv)
       ->SetContentBackgroundColor(color);
+}
+
+content::RenderFrameHost* GetRenderFrameHost(
+    content::NavigationHandle* navigation_handle) {
+  int frame_tree_node_id = navigation_handle->GetFrameTreeNodeId();
+  content::FrameTreeNode* frame_tree_node =
+      content::FrameTreeNode::GloballyFindByID(frame_tree_node_id);
+  content::RenderFrameHostManager* render_manager =
+      frame_tree_node->render_manager();
+  content::RenderFrameHost* frame_host = nullptr;
+  if (render_manager) {
+    frame_host = render_manager->speculative_frame_host();
+    if (!frame_host)
+      frame_host = render_manager->current_frame_host();
+  }
+
+  return frame_host;
 }
 
 }  // namespace
@@ -1745,6 +1762,16 @@ void WebContents::DidFinishLoad(content::RenderFrameHost* render_frame_host,
 void WebContents::DidFailLoad(content::RenderFrameHost* render_frame_host,
                               const GURL& url,
                               int error_code) {
+  // See DocumentLoader::StartLoadingResponse() - when we navigate to a media
+  // resource the original request for the media resource, which resulted in a
+  // committed navigation, is simply discarded. The media element created
+  // inside the MediaDocument then makes *another new* request for the same
+  // media resource.
+  bool is_media_document =
+      media::IsSupportedMediaMimeType(web_contents()->GetContentsMimeType());
+  if (error_code == net::ERR_ABORTED && is_media_document)
+    return;
+
   bool is_main_frame = !render_frame_host->GetParent();
   int frame_process_id = render_frame_host->GetProcess()->GetID();
   int frame_routing_id = render_frame_host->GetRoutingID();
@@ -1768,18 +1795,8 @@ bool WebContents::EmitNavigationEvent(
     const std::string& event_name,
     content::NavigationHandle* navigation_handle) {
   bool is_main_frame = navigation_handle->IsInMainFrame();
-  int frame_tree_node_id = navigation_handle->GetFrameTreeNodeId();
-  content::FrameTreeNode* frame_tree_node =
-      content::FrameTreeNode::GloballyFindByID(frame_tree_node_id);
-  content::RenderFrameHostManager* render_manager =
-      frame_tree_node->render_manager();
-  content::RenderFrameHost* frame_host = nullptr;
-  if (render_manager) {
-    frame_host = render_manager->speculative_frame_host();
-    if (!frame_host)
-      frame_host = render_manager->current_frame_host();
-  }
   int frame_process_id = -1, frame_routing_id = -1;
+  content::RenderFrameHost* frame_host = GetRenderFrameHost(navigation_handle);
   if (frame_host) {
     frame_process_id = frame_host->GetProcess()->GetID();
     frame_routing_id = frame_host->GetRoutingID();
@@ -1988,6 +2005,9 @@ void WebContents::MessageHost(const std::string& channel,
 
 void WebContents::UpdateDraggableRegions(
     std::vector<mojom::DraggableRegionPtr> regions) {
+  if (owner_window() && owner_window()->has_frame())
+    return;
+
   draggable_region_ = DraggableRegionsToSkRegion(regions);
 }
 

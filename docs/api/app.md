@@ -63,7 +63,7 @@ Calling `event.preventDefault()` will prevent the default behavior, which is
 terminating the application.
 
 **Note:** If application quit was initiated by `autoUpdater.quitAndInstall()`,
-then `before-quit` is emitted *after* emitting `close` event on all windows and
+then `before-quit` is emitted _after_ emitting `close` event on all windows and
 closing them.
 
 **Note:** On Windows, this event will not be emitted if the app is closed due
@@ -150,9 +150,20 @@ Returns:
 
 * `event` Event
 
-Emitted when mac application become active. Difference from `activate` event is
+Emitted when the application becomes active. This differs from the `activate` event in
 that `did-become-active` is emitted every time the app becomes active, not only
-when Dock icon is clicked or application is re-launched.
+when Dock icon is clicked or application is re-launched. It is also emitted when a user
+switches to the app via the macOS App Switcher.
+
+### Event: 'did-resign-active' _macOS_
+
+Returns:
+
+* `event` Event
+
+Emitted when the app is no longer active and doesn’t have focus. This can be triggered,
+for example, by clicking on another application or by using the macOS App Switcher to
+switch to another application.
 
 ### Event: 'continue-activity' _macOS_
 
@@ -751,14 +762,21 @@ This API can be used for purposes such as deciding what language to present the 
 
 Here are some examples of return values of the various language and locale APIs with different configurations:
 
-* For Windows, where the application locale is German, the regional format is Finnish (Finland), and the preferred system languages from most to least preferred are French (Canada), English (US), Simplified Chinese (China), Finnish, and Spanish (Latin America):
-  * `app.getLocale()` returns `'de'`
-  * `app.getSystemLocale()` returns `'fi-FI'`
-  * `app.getPreferredSystemLanguages()` returns `['fr-CA', 'en-US', 'zh-Hans-CN', 'fi', 'es-419']`
-* On macOS, where the application locale is German, the region is Finland, and the preferred system languages from most to least preferred are French (Canada), English (US), Simplified Chinese, and Spanish (Latin America):
-  * `app.getLocale()` returns `'de'`
-  * `app.getSystemLocale()` returns `'fr-FI'`
-  * `app.getPreferredSystemLanguages()` returns `['fr-CA', 'en-US', 'zh-Hans-FI', 'es-419']`
+On Windows, given application locale is German, the regional format is Finnish (Finland), and the preferred system languages from most to least preferred are French (Canada), English (US), Simplified Chinese (China), Finnish, and Spanish (Latin America):
+
+```js
+app.getLocale() // 'de'
+app.getSystemLocale() // 'fi-FI'
+app.getPreferredSystemLanguages() // ['fr-CA', 'en-US', 'zh-Hans-CN', 'fi', 'es-419']
+```
+
+On macOS, given the application locale is German, the region is Finland, and the preferred system languages from most to least preferred are French (Canada), English (US), Simplified Chinese, and Spanish (Latin America):
+
+```js
+app.getLocale() // 'de'
+app.getSystemLocale() // 'fr-FI'
+app.getPreferredSystemLanguages() // ['fr-CA', 'en-US', 'zh-Hans-FI', 'es-419']
+```
 
 Both the available languages and regions and the possible return values differ between the two operating systems.
 
@@ -804,7 +822,7 @@ editor. Please refer to [Apple's documentation][CFBundleURLTypes] for details.
 **Note:** In a Windows Store environment (when packaged as an `appx`) this API
 will return `true` for all calls but the registry key it sets won't be accessible
 by other applications.  In order to register your Windows Store application
-as a default protocol handler you must [declare the protocol in your manifest](https://docs.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-uap-protocol).
+as a default protocol handler you must [declare the protocol in your manifest](https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-uap-protocol).
 
 The API uses the Windows Registry and `LSSetDefaultHandlerForURLScheme` internally.
 
@@ -1399,7 +1417,7 @@ Start accessing a security scoped resource. With this method Electron applicatio
 
 ### `app.enableSandbox()`
 
-Enables full sandbox mode on the app. This means that all renderers will be launched sandboxed, regardless of the value of the `sandbox` flag in WebPreferences.
+Enables full sandbox mode on the app. This means that all renderers will be launched sandboxed, regardless of the value of the `sandbox` flag in [`WebPreferences`](structures/web-preferences.md).
 
 This method can only be called before app is ready.
 

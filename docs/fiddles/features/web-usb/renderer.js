@@ -1,8 +1,8 @@
-function getDeviceDetails(device) {
+function getDeviceDetails (device) {
   return device.productName || `Unknown device ${device.deviceId}`
 }
 
-async function testIt() {
+async function testIt () {
   const noDevicesFoundMsg = 'No devices found'
   const grantedDevices = await navigator.usb.getDevices()
   let grantedDeviceList = ''
@@ -20,8 +20,7 @@ async function testIt() {
     const grantedDevice = await navigator.usb.requestDevice({
       filters: []
     })
-    grantedDeviceList += `<hr>${getDeviceDetails(device)}</hr>`
-
+    grantedDeviceList += `<hr>${getDeviceDetails(grantedDevice)}</hr>`
   } catch (ex) {
     if (ex.name === 'NotFoundError') {
       grantedDeviceList = noDevicesFoundMsg
@@ -30,4 +29,4 @@ async function testIt() {
   document.getElementById('granted-devices2').innerHTML = grantedDeviceList
 }
 
-document.getElementById('clickme').addEventListener('click',testIt)
+document.getElementById('clickme').addEventListener('click', testIt)

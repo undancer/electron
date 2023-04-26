@@ -153,11 +153,12 @@ describe('chrome extensions', () => {
     const customSession = session.fromPartition(`persist:${require('uuid').v4()}`);
 
     const loadedPromise = once(customSession, 'extension-loaded');
-    const extension = await customSession.loadExtension(path.join(fixtures, 'extensions', 'red-bg'));
-    const [, loadedExtension] = await loadedPromise;
-    const [, readyExtension] = await emittedUntil(customSession, 'extension-ready', (event: Event, extension: Extension) => {
+    const readyPromise = emittedUntil(customSession, 'extension-ready', (event: Event, extension: Extension) => {
       return extension.name !== 'Chromium PDF Viewer';
     });
+    const extension = await customSession.loadExtension(path.join(fixtures, 'extensions', 'red-bg'));
+    const [, loadedExtension] = await loadedPromise;
+    const [, readyExtension] = await readyPromise;
 
     expect(loadedExtension).to.deep.equal(extension);
     expect(readyExtension).to.deep.equal(extension);
@@ -589,9 +590,9 @@ describe('chrome extensions', () => {
           });
         });
 
-        // TODO(nornagon): real extensions don't load on file: urls, so this
+        // FIXME(nornagon): real extensions don't load on file: urls, so this
         // test needs to be updated to serve its content over http.
-        describe.skip('supports "all_frames" option', () => {
+        xdescribe('supports "all_frames" option', () => {
           const contentScript = path.resolve(fixtures, 'extensions/content-script');
 
           // Computed style values

@@ -19,6 +19,36 @@ const contents = win.webContents
 console.log(contents)
 ```
 
+## Navigation Events
+
+Several events can be used to monitor navigations as they occur within a `webContents`.
+
+### Document Navigations
+
+When a `webContents` navigates to another page (as opposed to an [in-page navigation](web-contents.md#in-page-navigation)), the following events will be fired.
+
+* [`did-start-navigation`](web-contents.md#event-did-start-navigation)
+* [`will-frame-navigate`](web-contents.md#event-will-frame-navigate)
+* [`will-navigate`](web-contents.md#event-will-navigate) (only fired when main frame navigates)
+* [`will-redirect`](web-contents.md#event-will-redirect) (only fired when a redirect happens during navigation)
+* [`did-redirect-navigation`](web-contents.md#event-did-redirect-navigation) (only fired when a redirect happens during navigation)
+* [`did-frame-navigate`](web-contents.md#event-did-frame-navigate)
+* [`did-navigate`](web-contents.md#event-did-navigate) (only fired when main frame navigates)
+
+Subsequent events will not fire if `event.preventDefault()` is called on any of the cancellable events.
+
+### In-page Navigation
+
+In-page navigations don't cause the page to reload, but instead navigate to a location within the current page. These events are not cancellable. For an in-page navigations, the following events will fire in this order:
+
+* [`did-start-navigation`](web-contents.md#event-did-start-navigation)
+* [`did-navigate-in-page`](web-contents.md#event-did-navigate-in-page)
+
+### Frame Navigation
+
+The [`will-navigate`](web-contents.md#event-will-navigate) and [`did-navigate`](web-contents.md#event-did-navigate) events only fire when the [mainFrame](web-contents.md#contentsmainframe-readonly) navigates.
+If you want to also observe navigations in `<iframe>`s, use [`will-frame-navigate`](web-contents.md#event-will-frame-navigate) and [`did-frame-navigate`](web-contents.md#event-did-frame-navigate) events.
+
 ## Methods
 
 These methods can be accessed from the `webContents` module:
@@ -35,28 +65,28 @@ for all windows, webviews, opened devtools, and devtools extension background pa
 
 ### `webContents.getFocusedWebContents()`
 
-Returns `WebContents` | null - The web contents that is focused in this application, otherwise
+Returns `WebContents | null` - The web contents that is focused in this application, otherwise
 returns `null`.
 
 ### `webContents.fromId(id)`
 
 * `id` Integer
 
-Returns `WebContents` | undefined - A WebContents instance with the given ID, or
+Returns `WebContents | undefined` - A WebContents instance with the given ID, or
 `undefined` if there is no WebContents associated with the given ID.
 
 ### `webContents.fromFrame(frame)`
 
 * `frame` WebFrameMain
 
-Returns `WebContents` | undefined - A WebContents instance with the given WebFrameMain, or
+Returns `WebContents | undefined` - A WebContents instance with the given WebFrameMain, or
 `undefined` if there is no WebContents associated with the given WebFrameMain.
 
 ### `webContents.fromDevToolsTargetId(targetId)`
 
 * `targetId` string - The Chrome DevTools Protocol [TargetID](https://chromedevtools.github.io/devtools-protocol/tot/Target/#type-TargetID) associated with the WebContents instance.
 
-Returns `WebContents` | undefined - A WebContents instance with the given TargetID, or
+Returns `WebContents | undefined` - A WebContents instance with the given TargetID, or
 `undefined` if there is no WebContents associated with the given TargetID.
 
 When communicating with the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/),
@@ -180,7 +210,7 @@ Returns:
   * `url` string - URL for the created window.
   * `frameName` string - Name given to the created window in the
      `window.open()` call.
-  * `options` BrowserWindowConstructorOptions - The options used to create the
+  * `options` [BrowserWindowConstructorOptions](structures/browser-window-options.md) - The options used to create the
     BrowserWindow. They are merged in increasing precedence: parsed options
     from the `features` string from `window.open()`, security-related
     webPreferences inherited from the parent, and options given by
@@ -195,7 +225,7 @@ Returns:
     Only defined when the window is being created by a form that set
     `target=_blank`.
   * `disposition` string - Can be `default`, `foreground-tab`,
-    `background-tab`, `new-window`, `save-to-disk` and `other`.
+    `background-tab`, `new-window` or `other`.
 
 Emitted _after_ successful creation of a window via `window.open` in the renderer.
 Not emitted if the creation of the window is canceled from
@@ -225,8 +255,36 @@ Returns:
 * `frameProcessId` Integer _Deprecated_
 * `frameRoutingId` Integer _Deprecated_
 
-Emitted when a user or the page wants to start navigation. It can happen when
+Emitted when a user or the page wants to start navigation on the main frame. It can happen when
 the `window.location` object is changed or a user clicks a link in the page.
+
+This event will not emit when the navigation is started programmatically with
+APIs like `webContents.loadURL` and `webContents.back`.
+
+It is also not emitted for in-page navigations, such as clicking anchor links
+or updating the `window.location.hash`. Use `did-navigate-in-page` event for
+this purpose.
+
+Calling `event.preventDefault()` will prevent the navigation.
+
+#### Event: 'will-frame-navigate'
+
+Returns:
+
+* `details` Event<>
+  * `url` string - The URL the frame is navigating to.
+  * `isMainFrame` boolean - True if the navigation is taking place in a main frame.
+  * `frame` WebFrameMain - The frame to be navigated.
+  * `initiator` WebFrameMain (optional) - The frame which initiated the
+    navigation, which can be a parent frame (e.g. via `window.open` with a
+    frame's name), or null if the navigation was not initiated by a frame. This
+    can also be null if the initiating frame was deleted before the event was
+    emitted.
+
+Emitted when a user or the page wants to start navigation in any frame. It can happen when
+the `window.location` object is changed or a user clicks a link in the page.
+
+Unlike `will-navigate`, `will-frame-navigate` is fired when the main frame or any of its subframes attempts to navigate. When the navigation event comes from the main frame, `isMainFrame` will be `true`.
 
 This event will not emit when the navigation is started programmatically with
 APIs like `webContents.loadURL` and `webContents.back`.
@@ -777,20 +835,24 @@ Returns:
 * `callback` Function
   * `deviceId` string
 
-Emitted when bluetooth device needs to be selected on call to
-`navigator.bluetooth.requestDevice`. To use `navigator.bluetooth` api
-`webBluetooth` should be enabled. If `event.preventDefault` is not called,
-first available device will be selected. `callback` should be called with
-`deviceId` to be selected, passing empty string to `callback` will
-cancel the request.
+Emitted when a bluetooth device needs to be selected when a call to
+`navigator.bluetooth.requestDevice` is made. `callback` should be called with
+the `deviceId` of the device to be selected.  Passing an empty string to
+`callback` will cancel the request.
 
-If no event listener is added for this event, all bluetooth requests will be cancelled.
+If an event listener is not added for this event, or if `event.preventDefault`
+is not called when handling this event, the first available device will be
+automatically selected.
+
+Due to the nature of bluetooth, scanning for devices when
+`navigator.bluetooth.requestDevice` is called may take time and will cause
+`select-bluetooth-device` to fire multiple times until `callback` is called
+with either a device id or an empty string to cancel the request.
 
 ```javascript title='main.js'
 const { app, BrowserWindow } = require('electron')
 
 let win = null
-app.commandLine.appendSwitch('enable-experimental-web-platform-features')
 
 app.whenReady().then(() => {
   win = new BrowserWindow({ width: 800, height: 600 })
@@ -800,6 +862,9 @@ app.whenReady().then(() => {
       return device.deviceName === 'test'
     })
     if (!result) {
+      // The device wasn't found so we need to either wait longer (eg until the
+      // device is turned on) or cancel the request by calling the callback 
+      // with an empty string.
       callback('')
     } else {
       callback(result.deviceId)
@@ -838,7 +903,7 @@ Emitted when the devtools window instructs the webContents to reload
 Returns:
 
 * `event` Event
-* `webPreferences` WebPreferences - The web preferences that will be used by the guest
+* `webPreferences` [WebPreferences](structures/web-preferences.md) - The web preferences that will be used by the guest
   page. This object can be modified to adjust the preferences for the guest
   page.
 * `params` Record<string, string> - The other `<webview>` parameters such as the `src` URL.
@@ -1225,7 +1290,7 @@ Ignore application menu shortcuts while this web contents is focused.
     * `frameName` string - Name of the window provided in `window.open()`
     * `features` string - Comma separated list of window features provided to `window.open()`.
     * `disposition` string - Can be `default`, `foreground-tab`, `background-tab`,
-      `new-window`, `save-to-disk` or `other`.
+      `new-window` or `other`.
     * `referrer` [Referrer](structures/referrer.md) - The referrer that will be
       passed to the new window. May or may not result in the `Referer` header being
       sent, depending on the referrer policy.
@@ -1883,36 +1948,36 @@ Shows pop-up dictionary that searches the selected word on the page.
 
 #### `contents.isOffscreen()`
 
-Returns `boolean` - Indicates whether *offscreen rendering* is enabled.
+Returns `boolean` - Indicates whether _offscreen rendering_ is enabled.
 
 #### `contents.startPainting()`
 
-If *offscreen rendering* is enabled and not painting, start painting.
+If _offscreen rendering_ is enabled and not painting, start painting.
 
 #### `contents.stopPainting()`
 
-If *offscreen rendering* is enabled and painting, stop painting.
+If _offscreen rendering_ is enabled and painting, stop painting.
 
 #### `contents.isPainting()`
 
-Returns `boolean` - If *offscreen rendering* is enabled returns whether it is currently painting.
+Returns `boolean` - If _offscreen rendering_ is enabled returns whether it is currently painting.
 
 #### `contents.setFrameRate(fps)`
 
 * `fps` Integer
 
-If *offscreen rendering* is enabled sets the frame rate to the specified number.
+If _offscreen rendering_ is enabled sets the frame rate to the specified number.
 Only values between 1 and 240 are accepted.
 
 #### `contents.getFrameRate()`
 
-Returns `Integer` - If *offscreen rendering* is enabled returns the current frame rate.
+Returns `Integer` - If _offscreen rendering_ is enabled returns the current frame rate.
 
 #### `contents.invalidate()`
 
 Schedules a full repaint of the window this web contents is in.
 
-If *offscreen rendering* is enabled invalidates the frame and generates a new
+If _offscreen rendering_ is enabled invalidates the frame and generates a new
 one through the `'paint'` event.
 
 #### `contents.getWebRTCIPHandlingPolicy()`
@@ -2053,7 +2118,7 @@ The zoom factor is the zoom percent divided by 100, so 300% = 3.0.
 An `Integer` property that sets the frame rate of the web contents to the specified number.
 Only values between 1 and 240 are accepted.
 
-Only applicable if *offscreen rendering* is enabled.
+Only applicable if _offscreen rendering_ is enabled.
 
 #### `contents.id` _Readonly_
 

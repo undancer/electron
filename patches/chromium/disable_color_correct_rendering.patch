@@ -20,10 +20,10 @@ to deal with color spaces. That is being tracked at
 https://crbug.com/634542 and https://crbug.com/711107.
 
 diff --git a/cc/trees/layer_tree_host_impl.cc b/cc/trees/layer_tree_host_impl.cc
-index f6ce27a1611961e4e854967d7a8bb58cb4e19628..a9e0e73f380d449b5cb398be06d3ef51c742fe87 100644
+index ffaf89466d29864bd1bb91565c16303b097e4e5d..56fe848755bc56ddb5b5893476ba82ed185774c0 100644
 --- a/cc/trees/layer_tree_host_impl.cc
 +++ b/cc/trees/layer_tree_host_impl.cc
-@@ -1888,6 +1888,10 @@ void LayerTreeHostImpl::SetIsLikelyToRequireADraw(
+@@ -1915,6 +1915,10 @@ void LayerTreeHostImpl::SetIsLikelyToRequireADraw(
  TargetColorParams LayerTreeHostImpl::GetTargetColorParams(
      gfx::ContentColorUsage content_color_usage) const {
    TargetColorParams params;
@@ -35,7 +35,7 @@ index f6ce27a1611961e4e854967d7a8bb58cb4e19628..a9e0e73f380d449b5cb398be06d3ef51
    // If we are likely to software composite the resource, we use sRGB because
    // software compositing is unable to perform color conversion.
 diff --git a/cc/trees/layer_tree_settings.h b/cc/trees/layer_tree_settings.h
-index 29cd1a8a5db8ad7533458e4ed3f7a08479747b3c..db87c255789f9194b6f0d5d2d9c7e33658e8dcc1 100644
+index d67c103a301f6398084f8db8a7d559981f3c669c..ccec09bdde3b107b0260ec9d26f5db20e023ce89 100644
 --- a/cc/trees/layer_tree_settings.h
 +++ b/cc/trees/layer_tree_settings.h
 @@ -96,6 +96,8 @@ class CC_EXPORT LayerTreeSettings {
@@ -81,10 +81,10 @@ index c7ca2458708dd9577afdaef7fbcafaaa68046904..c4a1f1368ef053830c86cf86c3bec7ce
        !command_line->HasSwitch(switches::kUIDisablePartialSwap);
  
 diff --git a/content/browser/gpu/gpu_process_host.cc b/content/browser/gpu/gpu_process_host.cc
-index 98e21ef6e75cb86e3408514fb42124949e611b64..a699285a41537932b5c1182cafc1024b8284bb4a 100644
+index 9e53989c27763d082dabbaee2149206906977d10..7f6698c75db98e0a239a9144c73362f5ec2b38bd 100644
 --- a/content/browser/gpu/gpu_process_host.cc
 +++ b/content/browser/gpu/gpu_process_host.cc
-@@ -226,6 +226,7 @@ GpuTerminationStatus ConvertToGpuTerminationStatus(
+@@ -227,6 +227,7 @@ GpuTerminationStatus ConvertToGpuTerminationStatus(
  
  // Command-line switches to propagate to the GPU process.
  static const char* const kSwitchNames[] = {
@@ -93,10 +93,10 @@ index 98e21ef6e75cb86e3408514fb42124949e611b64..a699285a41537932b5c1182cafc1024b
      sandbox::policy::switches::kGpuSandboxAllowSysVShm,
      sandbox::policy::switches::kGpuSandboxFailuresFatal,
 diff --git a/content/browser/renderer_host/render_process_host_impl.cc b/content/browser/renderer_host/render_process_host_impl.cc
-index 9dfe0c331f97b11f285179881cd8c7820b4b61a5..7d0417c08cfabc466d6586ad382135f2a3feff0b 100644
+index da1b9e452b349b05c985791847044a33ad04f97a..844a544811b5470ee3ce90105cfc655cfb353b9a 100644
 --- a/content/browser/renderer_host/render_process_host_impl.cc
 +++ b/content/browser/renderer_host/render_process_host_impl.cc
-@@ -3317,6 +3317,7 @@ void RenderProcessHostImpl::PropagateBrowserCommandLineToRenderer(
+@@ -3333,6 +3333,7 @@ void RenderProcessHostImpl::PropagateBrowserCommandLineToRenderer(
    // Propagate the following switches to the renderer command line (along
    // with any associated values) if present in the browser command line.
    static const char* const kSwitchNames[] = {
